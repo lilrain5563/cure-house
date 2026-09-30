@@ -1,0 +1,26 @@
+{
+  "name": "治愈小屋 · 小雨的家",
+  "short_name": "治愈小屋",
+  "description": "一间小小的、只属于你的屋子。窗外有星，桌上有灯，壁炉永远暖着。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#10102a",
+  "theme_color": "#10102a",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

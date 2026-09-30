@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>治愈小屋 · 小雨的家</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='4' width='12' height='10' fill='%23ffd166'/%3E%3Crect x='4' y='6' width='8' height='6' fill='%23e8a257'/%3E%3Crect x='0' y='4' width='16' height='3' fill='%23a84338'/%3E%3Crect x='3' y='10' width='4' height='4' fill='%237a5230'/%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#10102a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="治愈小屋">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=Press+Start+2P&family=DotGothic16&display=swap">
+<style>
+  :root{
+    --night:#10102a;
+    --night2:#1c1c44;
+    --wall:#8a5a3b;
+    --wall-dark:#6e4528;
+    --floor:#6e4626;
+    --floor-dark:#52341c;
+    --wood:#7a5230;
+    --wood-dark:#5e3d22;
+    --red:#a84338;
+    --cream:#f5e9d0;
+    --text:#f5e9d0;
+    --muted:#b8a98a;
+    --fire:#ff8c42;
+    --fire-core:#ffd166;
+    --leaf:#6da04e;
+    --pixel:'Press Start 2P', monospace;
+    --cn:'DotGothic16', 'Microsoft YaHei', sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{min-height:100%;}
+  body{
+    background:
+      radial-gradient(ellipse at 50% -20%, #23234f 0%, transparent 60%),
+      linear-gradient(#0d0d24 0%, #10102a 50%, #0a0a1c 100%);
+    color:var(--text);
+    font-family:var(--cn);
+    display:flex;flex-direction:column;align-items:center;
+    padding:24px 16px 40px;
+    line-height:1.7;
+  }
+  body::before{
+    content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:
+      radial-gradient(1px 1px at 12% 22%, rgba(255,233,168,.7) 50%, transparent 51%),
+      radial-gradient(1px 1px at 28% 8%,  rgba(255,233,168,.5) 50%, transparent 51%),
+      radial-gradient(1px 1px at 45% 15%, rgba(255,233,168,.8) 50%, transparent 51%),
+      radial-gradient(1px 1px at 63% 6%,  rgba(255,233,168,.5) 50%, transparent 51%),
+      radial-gradient(1px 1px at 78% 20%, rgba(255,233,168,.7) 50%, transparent 51%),
+      radial-gradient(1px 1px at 90% 12%, rgba(255,233,168,.4) 50%, transparent 51%),
+      radial-gradient(2px 2px at 18% 40%, rgba(255,233,168,.35) 50%, transparent 51%),
+      radial-gradient(2px 2px at 82% 36%, rgba(255,233,168,.3) 50%, transparent 51%);
+  }
+  #app{position:relative;z-index:1;width:100%;max-width:760px;display:flex;flex-direction:column;align-items:center;gap:18px;}
+
+  header{text-align:center;}
+  .pixel-en{
+    font-family:var(--pixel);
+    font-size:11px;letter-spacing:3px;color:var(--fire-core);
+    text-shadow:0 0 12px rgba(255,209,102,.6);
+    margin-bottom:8px;
+  }
+  h1{
+    font-family:var(--cn);
+    font-size:40px;font-weight:900;letter-spacing:10px;text-indent:10px;
+    color:var(--cream);
+    text-shadow:3px 3px 0 var(--red), 6px 6px 0 rgba(0,0,0,.4);
+  }
+  .sub{margin-top:6px;font-size:14px;color:var(--muted);letter-spacing:2px;}
+
+  .stage{
+    position:relative;width:100%;max-width:720px;
+    border:4px solid var(--wood-dark);
+    box-shadow:0 0 0 4px #0a0a1c, 0 0 0 6px var(--red), 0 18px 50px rgba(0,0,0,.6);
+    background:#000;
+  }
+  canvas#scene{
+    display:block;width:100%;height:auto;
+    image-rendering:pixelated;
+    cursor:pointer;
+  }
+  #speech{
+    position:absolute;left:8px;right:8px;bottom:8px;
+    background:rgba(16,16,42,.92);
+    border:3px solid var(--wood);
+    padding:12px 14px;
+    font-size:15px;min-height:60px;
+    display:flex;align-items:center;
+    box-shadow:4px 4px 0 rgba(0,0,0,.45);
+    pointer-events:none;
+    user-select:none;
+  }
+  #speech .caret{
+    display:inline-block;width:8px;height:16px;background:var(--fire-core);
+    margin-left:4px;animation:blink 1s steps(1) infinite;
+  }
+  @keyframes blink{50%{opacity:0;}}
+  #speech .author{
+    flex-shrink:0;margin-right:10px;font-family:var(--pixel);font-size:9px;color:var(--fire-core);white-space:nowrap;
+  }
+  #voice-status{
+    position:absolute;top:8px;right:8px;
+    background:rgba(16,16,42,.85);
+    border:2px solid var(--wood);
+    padding:4px 8px;
+    font-family:var(--pixel);font-size:8px;color:var(--fire-core);
+    display:none;
+  }
+  #voice-status.show{display:block;}
+
+  .controls{
+    display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
+  }
+  .btn{
+    font-family:var(--cn);
+    font-size:15px;letter-spacing:2px;
+    color:var(--cream);
+    background:var(--night2);
+    border:3px solid var(--wood);
+    padding:10px 16px;
+    cursor:pointer;
+    box-shadow:3px 3px 0 rgba(0,0,0,.5);
+    transition:transform .06s, box-shadow .06s, background .15s;
+    user-select:none;
+  }
+  .btn:hover{background:#2a2a5a;transform:translate(-1px,-1px);box-shadow:4px 4px 0 rgba(0,0,0,.5);}
+  .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(0,0,0,.5);}
+  .btn .en{display:block;font-family:var(--pixel);font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:2px;text-align:center;}
+  .btn.on{background:#3a2a4a;border-color:var(--fire-core);}
+  .btn.on .en{color:var(--fire-core);}
+  .btn.voice{background:#3a2438;border-color:#c25a4c;}
+  .btn.voice:hover{background:#4a2e46;}
+
+  #modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(5,5,16,.7);align-items:center;justify-content:center;padding:16px;}
+  #modal.open{display:flex;}
+  .modal-box{
+    width:100%;max-width:420px;
+    background:var(--night2);
+    border:4px solid var(--wood);
+    box-shadow:6px 6px 0 rgba(0,0,0,.5), 0 0 0 4px #0a0a1c;
+    padding:20px;
+  }
+  .modal-box h3{font-size:18px;letter-spacing:2px;margin-bottom:4px;color:var(--fire-core);}
+  .modal-box p{font-size:13px;color:var(--muted);margin-bottom:12px;}
+  #note-input{
+    width:100%;min-height:90px;resize:vertical;
+    background:#0a0a1c;color:var(--cream);
+    border:3px solid var(--wood-dark);
+    font-family:var(--cn);font-size:16px;line-height:1.6;
+    padding:10px;outline:none;
+  }
+  #note-input:focus{border-color:var(--fire-core);}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;}
+  .btn.small{padding:8px 14px;font-size:14px;}
+  .btn.primary{background:var(--red);border-color:var(--wood-dark);}
+  .btn.primary:hover{background:#c25246;}
+
+  footer{margin-top:6px;font-size:12px;color:var(--muted);letter-spacing:1px;text-align:center;}
+
+  /* 添加到桌面按钮 */
+  .install-wrap{width:100%;display:flex;justify-content:center;}
+  .btn.install{
+    font-size:17px;letter-spacing:3px;padding:13px 30px;
+    background:linear-gradient(#3a2438,#2a1a2e);
+    border:3px solid var(--fire-core);
+    box-shadow:4px 4px 0 rgba(0,0,0,.5), 0 0 18px rgba(255,209,102,.25);
+    animation:installGlow 2.4s ease-in-out infinite;
+  }
+  .btn.install:hover{background:linear-gradient(#4a2e46,#3a2438);}
+  .btn.install .en{color:var(--fire-core);font-size:9px;}
+  @keyframes installGlow{
+    0%,100%{box-shadow:4px 4px 0 rgba(0,0,0,.5), 0 0 10px rgba(255,209,102,.18);}
+    50%{box-shadow:4px 4px 0 rgba(0,0,0,.5), 0 0 24px rgba(255,209,102,.45);}
+  }
+  /* 安装引导弹窗 */
+  #install-modal{display:none;position:fixed;inset:0;z-index:60;background:rgba(5,5,16,.8);align-items:center;justify-content:center;padding:16px;}
+  #install-modal.open{display:flex;}
+  #install-modal .modal-box{max-width:400px;}
+  #install-modal ol{margin:4px 0 12px 18px;font-size:14px;color:var(--text);line-height:1.9;}
+  #install-modal ol b{color:var(--fire-core);}
+  .ios-only{display:none;}
+  .ios-only.show{display:block;}
+  .wechat-only{display:none;}
+  .wechat-only.show{display:block;}
+  .install-hint{font-size:12px;color:var(--muted);margin-top:8px;}
+
+  /* 微信环境提示条 */
+  #wechat-bar{
+    display:none;width:100%;max-width:720px;
+    background:#1a3a2e;
+    border:3px solid var(--leaf);
+    padding:10px 14px;
+    font-size:14px;color:var(--cream);letter-spacing:1px;
+    box-shadow:3px 3px 0 rgba(0,0,0,.4);
+  }
+  #wechat-bar.show{display:block;}
+
+  @media (max-width:560px){
+    h1{font-size:28px;letter-spacing:6px;text-indent:6px;}
+    .btn{font-size:14px;padding:9px 12px;}
+    #speech{font-size:13px;padding:10px 10px;}
+    .pixel-en{font-size:9px;}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header>
+    <div class="pixel-en">HEALING HUT</div>
+    <h1>治愈小屋</h1>
+    <div class="sub">小雨的家 · 欢迎来坐坐</div>
+  </header>
+
+  <div class="stage">
+    <canvas id="scene" width="160" height="100"></canvas>
+    <div id="voice-status">小雨的录音 · 播放中</div>
+    <div id="speech"><span class="author">小雨</span><span id="speech-text"></span><span class="caret" id="caret"></span></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="btn-weather">换天气<span class="en">WEATHER</span></button>
+    <button class="btn on" id="btn-candle">吹蜡烛<span class="en">CANDLE</span></button>
+    <button class="btn" id="btn-note">写下烦恼<span class="en">LETTER</span></button>
+    <button class="btn" id="btn-lot">治愈签<span class="en">LOT</span></button>
+    <button class="btn voice" id="btn-voice">召唤小雨<span class="en">SUMMON</span></button>
+    <button class="btn" id="btn-sound">开声音<span class="en">SOUND</span></button>
+  </div>
+
+  <div class="install-wrap">
+    <button class="btn install" id="btn-install">添加到桌面<span class="en">让小雨陪着你吧</span></button>
+  </div>
+
+  <footer>小雨家的灯永远亮着 · 累了就来坐坐</footer>
+</div>
+
+<div id="modal">
+  <div class="modal-box">
+    <h3>把烦恼写下来</h3>
+    <p>写多少都行。写完之后，丢进壁炉里烧掉，它们就不再是你的了。</p>
+    <textarea id="note-input" placeholder="比如：今天好累，工作太多做不完……"></textarea>
+    <div class="modal-actions">
+      <button class="btn small" id="note-cancel">先不了</button>
+      <button class="btn small primary" id="note-burn">丢进壁炉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 添加到桌面引导 ===== -->
+<div id="install-modal">
+  <div class="modal-box">
+    <h3>让小雨陪着你吧</h3>
+    <p>把治愈小屋放到手机桌面，以后随时回来坐坐。</p>
+    <ol class="wechat-only" id="wechat-steps">
+      <li>点右上角「<b>···</b>」</li>
+      <li>选「<b>在浏览器打开</b>」</li>
+      <li>在浏览器里点页面上的「<b>添加到桌面</b>」按钮</li>
+      <li>按提示点「<b>安装 / 添加</b>」，就完成啦</li>
+    </ol>
+    <ol class="ios-only" id="ios-steps">
+      <li>点底部中间的 <b>分享按钮</b>（方框+箭头）</li>
+      <li>向下滑动，点「<b>添加到主屏幕</b>」</li>
+      <li>点右上角「<b>添加</b>」，就完成啦</li>
+    </ol>
+    <ol id="android-steps">
+      <li>点浏览器右上角 <b>菜单</b>（三个点）</li>
+      <li>选「<b>添加到主屏幕</b>」或「<b>安装应用</b>」</li>
+      <li>点「<b>安装 / 添加</b>」，就完成啦</li>
+    </ol>
+    <div class="install-hint">如果没找到，试试用 Chrome / Edge / Safari 打开这个页面。</div>
+    <div class="modal-actions">
+      <button class="btn small primary" id="install-close">好，我试试</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 微信环境提示条 ===== -->
+<div id="wechat-bar">
+  <span class="wx-text">微信里不能直接安装 · 请点右上角「···」→「在浏览器打开」</span>
+</div>
+
+<audio id="voice" src="assets/xiaoyu-voice.mp3" preload="auto"></audio>
+
+<script>
+/* ============================================================
+   治愈小屋 · 小雨的家 —— 像素互动场景
+   ============================================================ */
+const canvas = document.getElementById('scene');
+const ctx = canvas.getContext('2d');
+const W = 160, H = 100;
+
+/* ---------- 调色板 ---------- */
+const PAL = {
+  'K':'#1c1c44',   // 夜空
+  'k':'#141433',
+  'W':'#fff',
+  'w':'#f5e9d0',   // 米白
+  'Y':'#ffd166',   // 火心/烛光
+  'O':'#ff8c42',   // 火
+  'r':'#ff5e3a',   // 火缘
+  'B':'#7a5230',   // 木
+  'b':'#5e3d22',   // 深木
+  'D':'#6d4b36',   // 砖
+  'd':'#53382a',   // 深砖
+  'G':'#6da04e',   // 叶
+  'g':'#4e7d38',   // 深叶
+  'T':'#c96f3f',   // 陶土
+  'C':'#e8a257',   // 猫橘
+  'c':'#c97f3d',   // 猫纹
+  'E':'#2e241a',   // 眼
+  'M':'#a84338',   // 挂毯红
+  'm':'#c25a4c',
+  'S':'#cfc6b8',   // 烟
+  'H':'#f0c8a0',   // 皮肤
+  'h':'#d8a880',   // 皮肤阴影
+  'F':'#2b2b38',   // 头发深
+  'U':'#5a7fb0',   // 上衣蓝
+  'J':'#26262e',   // 眼镜框
+  'u':'#486a99',   // 上衣深
+  'P':'#3b3b52',   // 裤
+  '.':null
+};
+
+/* ---------- 像素画数据 ---------- */
+const CAT = [
+  '....KKKKKK......',
+  '...KKKKKKKK.....',
+  '..KKKKKKKKKK....',
+  '..KEEKKKKEEK....',
+  '..KEEKKKKEEK....',
+  '..KKKKKKKKKK....',
+  '...KKKKKKKK.....',
+  '....KKKKKK......',
+  '..KKKKKKKKKKK...',
+  '.KKKKKKKKKKKKK..',
+  '.KCCCCCCCCCCKK..',
+  '.KCcCCCCCCcCKK..',
+  '..KKKKKKKKKKK...',
+  '...KKKKKKKKK....',
+  '....KCC.KCC.....',
+  '....KKK.KKK.....'
+];
+const CANDLE = [
+  '....Y....',
+  '....Y....',
+  '...YYY...',
+  '....Y....',
+  '...WWW...',
+  '..WWWWW..',
+  '..WWWWW..',
+  '..WWWWW..',
+  '..WWWWW..',
+  '..WWWWW..',
+  '..BBBBB..',
+  '..BBBBB..'
+];
+const POT = [
+  '...GGGGGG...',
+  '..GGGGGGGG..',
+  '.GGGGGGGGGG.',
+  '.GGGGGGGGGG.',
+  '.GGGGGGGGGG.',
+  '..GGGGGGGG..',
+  '...GGGGGG...',
+  '..TTTTTTTT..',
+  '.TTTTTTTTTT.',
+  '.TTTTTTTTTT.',
+  '..TTTTTTTT..',
+  '..TTTTTTTT..'
+];
+/* 小雨：黑框眼镜的男青年 */
+const XIAOYU_IDLE = [
+  '.....KKKKKK.....',
+  '....KKKKKKKK....',
+  '...KKKKKKKKKK...',
+  '..KKHHHHHHHHKK..',
+  '..KKHHHHHHHHKK..',
+  '..KKJJJJJJJJKK..',
+  '..KKJHHHHHHHKK..',
+  '..KKJHHHHHHHKK..',
+  '..KKJHHEHHHHKK..',
+  '..KKJJJJJJJJKK..',
+  '..KKHHHHHHHHKK..',
+  '...HHHHHHHHHH...',
+  '..UUUUUUUUUUUU..',
+  '.UUUUUUUUUUUUUU.',
+  '.UUUUUUUUUUUUUU.',
+  '.UUHUUUUUUUUHUU.',
+  '..UUUUUUUUUUUU..',
+  '...PPPPPPPPPP...',
+  '..PPP......PPP..',
+  '..PPP......PPP..',
+  '.PPP........PPP.'
+];
+/* 走路：脚交替 + 手摆动 */
+const XIAOYU_WALKA = [
+  '.....KKKKKK.....',
+  '....KKKKKKKK....',
+  '...KKKKKKKKKK...',
+  '..KKHHHHHHHHKK..',
+  '..KKHHHHHHHHKK..',
+  '..KKJJJJJJJJKK..',
+  '..KKJHHHHHHHKK..',
+  '..KKJHHHHHHHKK..',
+  '..KKJHHEHHHHKK..',
+  '..KKJJJJJJJJKK..',
+  '..KKHHHHHHHHKK..',
+  '...HHHHHHHHHH...',
+  '..UUUUUUUUUUUU..',
+  '.UUUUUUUUUUUUUU.',
+  '.UUUUUUUUUUUUUU.',
+  '.UUHUUUUUUUUHUU.',
+  '..UUUUUUUUUUUU..',
+  '...PPPPPPPPPP...',
+  '..PPP.....PPP...',
+  '...PPP....PPP...',
+  '..PPP......PPP..'
+];
+const XIAOYU_WALKB = [
+  '.....KKKKKK.....',
+  '....KKKKKKKK....',
+  '...KKKKKKKKKK...',
+  '..KKHHHHHHHHKK..',
+  '..KKHHHHHHHHKK..',
+  '..KKJJJJJJJJKK..',
+  '..KKJHHHHHHHKK..',
+  '..KKJHHHHHHHKK..',
+  '..KKJHHEHHHHKK..',
+  '..KKJJJJJJJJKK..',
+  '..KKHHHHHHHHKK..',
+  '...HHHHHHHHHH...',
+  '..UUUUUUUUUUUU..',
+  '.UUUUUUUUUUUUUU.',
+  '.UUUUUUUUUUUUUU.',
+  '.UUHUUUUUUUUHUU.',
+  '..UUUUUUUUUUUU..',
+  '...PPPPPPPPPP...',
+  '.....PPP..PPP...',
+  '....PPP...PPP...',
+  '...PPP.....PPP..'
+];
+/* 挥手：右手举到头旁 */
+const XIAOYU_WAVE = [
+  '.....KKKKKK.....',
+  '....KKKKKKKK....',
+  '...KKKKKKKKKK...',
+  '..KKHHHHHHHHKK..',
+  '..KKHHHHHHHHKK..',
+  '..KKJJJJJJJJKK..',
+  '..KKJHHHHHHHKK..',
+  '..KKJHHHHHHHKK..',
+  '..KKJHHEHHHHKK..',
+  '..KKJJJJJJJJKK..',
+  '..KKHHHHHHHHKHH.',
+  '...HHHHHHHHHHH..',
+  '..UUUUUUUUUUUUH.',
+  '.UUUUUUUUUUUUUU.',
+  '.UUUUUUUUUUUUU..',
+  '.UUHUUUUUUUUU...',
+  '..UUUUUUUUUU....',
+  '...PPPPPPPPPP...',
+  '..PPP......PPP..',
+  '..PPP......PPP..',
+  '.PPP........PPP.'
+];
+
+/* ---------- 天气定义 ---------- */
+/* 8 音符循环旋律 + BPM，MIDI 音高 */
+const WEATHERS = [
+  {name:'星空', bg:'#141433', mel:[72,76,79,84,79,76,74,76], bpm:72},
+  {name:'雨天', bg:'#1a1a3c', mel:[69,72,76,81,76,72,69,72], bpm:60},
+  {name:'雪天', bg:'#20204a', mel:[74,78,81,86,81,78,74,78], bpm:76},
+  {name:'晴天', bg:'#4a8cc9', mel:[79,83,86,91,86,83,79,83], bpm:84},
+  {name:'黄昏', bg:'#7a4a5e', mel:[77,81,84,89,84,81,77,81], bpm:63},
+  {name:'极光', bg:'#1c3a34', mel:[76,80,83,88,83,80,76,80], bpm:70}
+];
+const midiFreq = m => 440 * Math.pow(2, (m-69)/12);
+
+/* ---------- 状态 ---------- */
+const state = {
+  weather: 0,
+  candleOn: true,
+  soundOn: false,
+  noteFlying: false,
+  fireBoost: 0,
+  speechBusy: false
+};
+
+const rnd = (a,b)=>a+Math.random()*(b-a);
+
+/* 窗口（客厅窗户） */
+const windowRect = {x:16, y:22, w:36, h:22};
+let stars=[], rains=[], snows=[], clouds=[], birds=[];
+(function initParticles(){
+  stars=[];
+  for(let i=0;i<22;i++){
+    stars.push({x:windowRect.x+rnd(2,windowRect.w-2), y:windowRect.y+rnd(2,windowRect.h-2), r:Math.random()<.8?1:2, ph:rnd(0,6.28)});
+  }
+  rains=[];
+  for(let i=0;i<18;i++){
+    rains.push({x:windowRect.x+rnd(0,windowRect.w), y:windowRect.y+rnd(0,windowRect.h), sp:rnd(1.5,3)});
+  }
+  snows=[];
+  for(let i=0;i<13;i++){
+    snows.push({x:windowRect.x+rnd(0,windowRect.w), y:windowRect.y+rnd(0,windowRect.h), sp:rnd(.4,1), dr:rnd(-.3,.3)});
+  }
+  clouds=[
+    {x:windowRect.x+2, y:windowRect.y+2, sp:.15},
+    {x:windowRect.x+20, y:windowRect.y+8, sp:.1}
+  ];
+  birds=[{x:windowRect.x+8,y:windowRect.y+4,vx:.25},{x:windowRect.x+24,y:windowRect.y+12,vx:.2}];
+})();
+
+let smoke=[];
+
+/* ---------- 像素绘制 ---------- */
+function px(rows, x, y){
+  rows.forEach((row,i)=>{
+    for(let j=0;j<row.length;j++){
+      const c = PAL[row[j]];
+      if(c) { ctx.fillStyle=c; ctx.fillRect(x+j, y+i, 1, 1); }
+    }
+  });
+}
+
+/* ---------- 场景绘制 ---------- */
+function drawScene(t){
+  ctx.imageSmoothingEnabled=false;
+  ctx.fillStyle='#0d0d24';
+  ctx.fillRect(0,0,W,H);
+
+  /* 墙 */
+  ctx.fillStyle=PAL['B'];
+  ctx.fillRect(0,0,W,84);
+  ctx.fillStyle=PAL['b'];
+  for(let y=0;y<84;y+=6){ ctx.fillRect(0,y,W,1); }
+  ctx.fillStyle=PAL['D'];
+  ctx.fillRect(0,76,W,8);
+  ctx.fillStyle=PAL['d'];
+  ctx.fillRect(0,82,W,2);
+
+  /* 地板 */
+  ctx.fillStyle=PAL['b'];
+  ctx.fillRect(0,84,W,16);
+  ctx.fillStyle=PAL['d'];
+  for(let y=84;y<100;y+=4){ ctx.fillRect(0,y,W,1); }
+  ctx.fillStyle=PAL['M'];
+  ctx.fillRect(16,88,104,7);
+  ctx.fillStyle=PAL['m'];
+  ctx.fillRect(16,88,104,1);
+  ctx.fillRect(16,94,104,1);
+
+  /* ---- 窗户 ---- */
+  const wx=windowRect.x-4, wy=windowRect.y-4;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(wx, wy, windowRect.w+8, windowRect.h+8);
+  ctx.clip();
+  drawWeatherWindow(t);
+  ctx.restore();
+  /* 窗框 */
+  ctx.fillStyle=PAL['B'];
+  ctx.fillRect(wx-2,wy-2,windowRect.w+12,3);
+  ctx.fillRect(wx-2,wy+windowRect.h+7,windowRect.w+12,3);
+  ctx.fillRect(wx-2,wy-2,3,windowRect.h+12);
+  ctx.fillRect(wx+windowRect.w+5,wy-2,3,windowRect.h+12);
+  ctx.fillRect(wx+windowRect.w/2+1,wy-1,2,windowRect.h+8);
+  ctx.fillRect(wx-1,wy+windowRect.h/2+1,windowRect.w+8,2);
+  ctx.fillStyle=PAL['b'];
+  ctx.fillRect(wx-2,wy+windowRect.h/2+3,windowRect.w+12,1);
+
+  /* ---- 挂毯 ---- */
+  ctx.fillStyle=PAL['M'];
+  ctx.fillRect(60,22,14,20);
+  ctx.fillStyle=PAL['m'];
+  ctx.fillRect(60,22,14,2);
+  ctx.fillStyle=PAL['Y'];
+  ctx.fillRect(63,27,2,2);ctx.fillRect(69,27,2,2);
+  ctx.fillRect(66,31,2,2);
+  ctx.fillStyle=PAL['b'];
+  ctx.fillRect(60,40,14,2);
+
+  /* ---- 壁炉 ---- */
+  const fx=88;
+  ctx.fillStyle=PAL['D'];
+  ctx.fillRect(fx,44,40,42);
+  ctx.fillStyle=PAL['d'];
+  ctx.fillRect(fx+2,46,36,2);
+  ctx.fillRect(fx,44,40,3);
+  ctx.fillStyle=PAL['B'];
+  ctx.fillRect(fx-2,44,4,46);
+  ctx.fillRect(fx+38,44,4,46);
+  ctx.fillRect(fx-4,44,48,4);
+  ctx.fillRect(fx-4,86,48,4);
+  /* 炉口 */
+  ctx.fillStyle='#120b06';
+  ctx.fillRect(fx+8,56,24,26);
+
+  const boost = state.fireBoost>0 ? 1+state.fireBoost*.5 : 1;
+  if(state.fireBoost>0) state.fireBoost = Math.max(0, state.fireBoost-.008);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(fx+8,56,24,26);
+  ctx.clip();
+  drawFire(fx+8,56,24,26,t,boost);
+  for(let i=0;i<4;i++){
+    ctx.fillStyle = Math.random()<.5 ? PAL['Y'] : PAL['O'];
+    ctx.fillRect(fx+10+rnd(0,20), 74+rnd(0,6), 1,1);
+  }
+  ctx.restore();
+
+  /* 壁炉台上小摆件 */
+  ctx.fillStyle=PAL['U'];
+  ctx.fillRect(fx+30,52,3,3);
+  ctx.fillStyle=PAL['Y'];
+  ctx.fillRect(fx+6,52,2,2);
+
+  /* ---- 门（通向另一个房间） ---- */
+  ctx.fillStyle=PAL['b'];
+  ctx.fillRect(136,42,22,44);
+  ctx.fillStyle=PAL['B'];
+  ctx.fillRect(138,44,18,42);
+  ctx.fillStyle=PAL['Y'];
+  ctx.fillRect(150,66,2,2);       // 门把手
+  ctx.fillStyle=PAL['d'];
+  ctx.fillRect(138,44,18,1);
+  ctx.fillRect(138,62,18,1);
+  ctx.fillRect(138,80,18,1);
+
+  /* ---- 桌子 + 蜡烛 ---- */
+  ctx.fillStyle=PAL['B'];
+  ctx.fillRect(52,68,30,3);
+  ctx.fillStyle=PAL['b'];
+  ctx.fillRect(54,71,3,11);
+  ctx.fillRect(77,71,3,11);
+  ctx.fillRect(52,81,30,1);
+
+  if(state.candleOn){
+    px(CANDLE, 66, 56);
+    drawFlame(70,53,1,t);
+    ctx.fillStyle='rgba(255,209,102,.10)';
+    ctx.fillRect(56,42,26,20);
+  } else {
+    px(CANDLE, 66, 56);
+  }
+
+  /* ---- 盆栽 ---- */
+  px(POT, 124, 70);
+
+  /* ---- 猫 ---- */
+  px(CAT, 28, 78);
+
+  /* ---- 小雨 ---- */
+  drawXiaoyu(t);
+
+  /* 烟雾 */
+  smoke.forEach(p=>{
+    ctx.fillStyle=`rgba(207,198,184,${Math.max(0,p.life).toFixed(2)})`;
+    ctx.fillRect(p.x,p.y,2,2);
+  });
+}
+
+/* 窗外天气画面 */
+function drawWeatherWindow(t){
+  const wx=windowRect.x, wy=windowRect.y;
+  const wt=state.weather;
+  ctx.fillStyle=WEATHERS[wt].bg;
+  ctx.fillRect(wx-4,wy-4,windowRect.w+8,windowRect.h+8);
+
+  if(wt===0){ // 星空
+    ctx.fillStyle='#f7f3d6';
+    ctx.fillRect(wx+windowRect.w-8, wy+1, 3,3);
+    ctx.fillRect(wx+windowRect.w-8, wy+4, 2,2);
+    stars.forEach(s=>{
+      const a = .35+.65*Math.abs(Math.sin(t*.003+s.ph));
+      ctx.fillStyle=`rgba(255,233,168,${a.toFixed(2)})`;
+      ctx.fillRect(s.x,s.y,s.r,s.r);
+    });
+  } else if(wt===1){ // 雨天
+    ctx.fillStyle='#2a2a55';
+    ctx.fillRect(wx+1,wy+2,12,3);
+    ctx.fillRect(wx+9,wy,9,4);
+    ctx.fillRect(wx+windowRect.w-16,wy+5,10,3);
+    ctx.fillStyle='rgba(180,200,255,.55)';
+    rains.forEach(d=>{ ctx.fillRect(d.x,d.y,1,3); });
+  } else if(wt===2){ // 雪天
+    ctx.fillStyle='rgba(245,233,208,.9)';
+    snows.forEach(s=>{ ctx.fillRect(s.x,s.y,1,1); });
+    ctx.fillStyle='rgba(245,233,208,.85)';
+    ctx.fillRect(wx-3,wy+windowRect.h+2,windowRect.w+6,2);
+  } else if(wt===3){ // 晴天
+    ctx.fillStyle='#ffd166';
+    ctx.fillRect(wx+windowRect.w-10, wy+2, 4,4);
+    ctx.fillStyle='rgba(255,209,102,.3)';
+    ctx.fillRect(wx+windowRect.w-12, wy, 8,8);
+    ctx.fillStyle='rgba(255,255,255,.9)';
+    clouds.forEach(c=>{
+      ctx.fillRect(c.x,c.y,8,2);
+      ctx.fillRect(c.x+2,c.y-1,4,1);
+    });
+    ctx.fillStyle='rgba(80,60,40,.7)';
+    birds.forEach(b=>{
+      ctx.fillRect(b.x,b.y,2,1);
+      ctx.fillRect(b.x+3,b.y,2,1);
+    });
+  } else if(wt===4){ // 黄昏
+    ctx.fillStyle='#ffb45e';
+    ctx.fillRect(wx+windowRect.w-10, wy+3, 5,3);
+    ctx.fillStyle='rgba(255,180,94,.35)';
+    ctx.fillRect(wx-2,wy+windowRect.h-2,windowRect.w+4,2);
+    ctx.fillStyle='rgba(255,255,255,.5)';
+    clouds.forEach(c=>{ ctx.fillRect(c.x,c.y,7,2); });
+    birds.forEach(b=>{ ctx.fillRect(b.x,b.y,2,1); });
+  } else { // 极光
+    for(let i=0;i<4;i++){
+      const yy = wy+4 + i*5 + Math.sin(t*.006+i*2)*2;
+      ctx.fillStyle = `rgba(${80+i*25},${200+i*10},${140+i*20},${.25+i*.06})`;
+      ctx.fillRect(wx-2, yy, windowRect.w+4, 2);
+    }
+    stars.forEach(s=>{
+      const a = .3+.5*Math.abs(Math.sin(t*.003+s.ph+2));
+      ctx.fillStyle=`rgba(255,255,255,${a.toFixed(2)})`;
+      ctx.fillRect(s.x,s.y,s.r,s.r);
+    });
+  }
+}
+
+/* 火舌 */
+function drawFire(x,y,w,h,t,boost){
+  const n=4;
+  for(let i=0;i<n;i++){
+    const bw=w/n;
+    const bx=x+i*bw;
+    const wave = Math.abs(Math.sin(t*.012 + i*1.9))*.5 + .4;
+    const fh = h*wave*boost;
+    for(let yy=0; yy<fh; yy++){
+      const p = yy/fh;
+      ctx.fillStyle = p<.35 ? PAL['Y'] : p<.7 ? PAL['O'] : PAL['r'];
+      const jit = (Math.sin(t*.02+i*3+yy*.6)>.2? 1:0);
+      ctx.fillRect(bx+jit, y+h-yy, Math.max(1,bw-2), 1);
+    }
+  }
+  ctx.fillStyle=PAL['d'];
+  ctx.fillRect(x+2,y+h-3,w-4,3);
+  ctx.fillStyle=PAL['b'];
+  ctx.fillRect(x+2,y+h-3,w-4,1);
+}
+function drawFlame(x,y,s,t){
+  const fh = 3 + Math.abs(Math.sin(t*.01))*1.5;
+  ctx.fillStyle=PAL['Y'];
+  ctx.fillRect(x,y-fh,1,fh);
+  ctx.fillStyle=PAL['O'];
+  ctx.fillRect(x,y-fh,1,1);
+  ctx.fillStyle=PAL['Y'];
+  ctx.fillRect(x-1,y-fh*.5,1,1);
+  ctx.fillRect(x+1,y-fh*.5,1,1);
+}
+
+/* ---------- 粒子更新 ---------- */
+function updateParticles(t){
+  const wt=state.weather;
+  if(wt===1){
+    rains.forEach(d=>{
+      d.y+=d.sp;
+      if(d.y>windowRect.y+windowRect.h+6){ d.y=windowRect.y-4; d.x=windowRect.x+rnd(0,windowRect.w); }
+    });
+  }
+  if(wt===2){
+    snows.forEach(s=>{
+      s.y+=s.sp; s.x+=s.dr + Math.sin(t*.004+s.y*.3)*.15;
+      if(s.y>windowRect.y+windowRect.h+8){ s.y=windowRect.y-2; s.x=windowRect.x+rnd(0,windowRect.w); }
+      if(s.x<windowRect.x-2) s.x=windowRect.x+windowRect.w-2;
+      if(s.x>windowRect.x+windowRect.w+2) s.x=windowRect.x+2;
+    });
+  }
+  if(wt===3||wt===4){
+    clouds.forEach(c=>{
+      c.x+=c.sp;
+      if(c.x>windowRect.x+windowRect.w){ c.x=windowRect.x-10; }
+    });
+    birds.forEach(b=>{
+      b.x+=b.vx;
+      if(b.x>windowRect.x+windowRect.w){ b.x=windowRect.x-6; }
+    });
+  }
+  smoke.forEach(p=>{
+    p.y-=p.vy; p.x+=p.vx; p.life-=.008; p.vy+=.002;
+  });
+  smoke = smoke.filter(p=>p.life>0);
+}
+
+/* ---------- 打字机 ---------- */
+const speechText=document.getElementById('speech-text');
+function typeText(full, speed=45){
+  return new Promise(res=>{
+    speechText.textContent='';
+    let i=0;
+    const iv=setInterval(()=>{
+      i++;
+      speechText.textContent=full.slice(0,i);
+      if(i>=full.length){clearInterval(iv); setTimeout(res,500);}
+    },speed);
+  });
+}
+function say(text){ speechText.textContent=text; }
+
+/* ---------- 温柔话库 ---------- */
+const LOTS=[
+  '把烦恼交给火焰，它们今晚不属于你。',
+  '你已经撑到今天了，真的已经很厉害。',
+  '窗外雨再大，屋里也有暖的。',
+  '慢慢呼吸。吸气——呼气——很好。',
+  '你不需要一直坚强。',
+  '今晚就到这里吧，剩下的交给明天。',
+  '有人惦记着你，比如现在的我。',
+  '星星那么多，总有一颗是为你亮的。',
+  '你值得被温柔以待。',
+  '不用急着好起来，慢慢来。',
+  '你在这里，就已经很好了。',
+  '天大的事，睡一觉都会变小一点。',
+  '风会吹散乌云，你也会。',
+  '摸摸自己的头：你辛苦了。',
+  '允许自己休息，不是偷懒，是充电。'
+];
+const BURN_MSGS=[
+  '烧掉啦。那些事，明天再说也不迟。',
+  '火焰把它们收下了，你可以松一口气。',
+  '看，变成烟飘走了。你已经尽力了。',
+  '好了，交出去了。今晚好好睡。'
+];
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+/* ============================================================
+   八音盒音效引擎
+   ============================================================ */
+let AC=null, rainGain=null, fireGain=null, musicGain=null;
+let musicTimer=null, musicStep=0, musicNext=0;
+let envRain=null, envFire=null;
+
+function initAudio(){
+  if(AC) return;
+  AC = new (window.AudioContext||window.webkitAudioContext)();
+  const len = AC.sampleRate*2;
+
+  /* 雨：白噪音 + 低通 */
+  const rainBuf = AC.createBuffer(1,len,AC.sampleRate);
+  const rd = rainBuf.getChannelData(0);
+  for(let i=0;i<len;i++) rd[i]=Math.random()*2-1;
+  envRain=AC.createBufferSource(); envRain.buffer=rainBuf; envRain.loop=true;
+  const rFilter=AC.createBiquadFilter(); rFilter.type='lowpass'; rFilter.frequency.value=900;
+  rainGain=AC.createGain(); rainGain.gain.value=0;
+  envRain.connect(rFilter); rFilter.connect(rainGain); rainGain.connect(AC.destination);
+  envRain.start();
+
+  /* 火：棕噪音 + 低通 */
+  const fireBuf = AC.createBuffer(1,len,AC.sampleRate);
+  const fd = fireBuf.getChannelData(0);
+  let last=0;
+  for(let i=0;i<len;i++){ const w=Math.random()*2-1; last=(last+.02*w)/1.02; fd[i]=last*3.5; }
+  envFire=AC.createBufferSource(); envFire.buffer=fireBuf; envFire.loop=true;
+  const fFilter=AC.createBiquadFilter(); fFilter.type='lowpass'; fFilter.frequency.value=320;
+  fireGain=AC.createGain(); fireGain.gain.value=0;
+  envFire.connect(fFilter); fFilter.connect(fireGain); fireGain.connect(AC.destination);
+  envFire.start();
+
+  /* 八音盒主音量 */
+  musicGain=AC.createGain(); musicGain.gain.value=0;
+  musicGain.connect(AC.destination);
+
+  updateAmbience();
+  startMusic();
+}
+
+function updateAmbience(){
+  if(!AC) return;
+  const on = state.soundOn;
+  const t=AC.currentTime;
+  const wantRain = on && state.weather===1 ? .04 : 0;
+  const wantFire = on ? .02 : 0;
+  rainGain.gain.setTargetAtTime(wantRain, t, .5);
+  fireGain.gain.setTargetAtTime(wantFire, t, .5);
+  if(musicGain) musicGain.gain.setTargetAtTime(on ? .16 : 0, t, .5);
+}
+
+/* 八音盒单音：基音 + 两个泛音，快起音指数衰减 */
+function musicBoxNote(freq, when, dur, vol){
+  if(!musicGain) return;
+  const t = when;
+  const make=(mult, v)=>{
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.type='sine';
+    o.frequency.value=freq*mult;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(v, t+.006);
+    g.gain.exponentialRampToValueAtTime(.0001, t+dur);
+    o.connect(g); g.connect(musicGain);
+    o.start(t); o.stop(t+dur+.05);
+  };
+  make(1, vol);
+  make(2, vol*.22);
+  make(3, vol*.06);
+}
+
+/* 旋律调度：每拍一个音，循环 */
+function startMusic(){
+  if(!AC || !state.soundOn) return;
+  stopMusic();
+  const wt = WEATHERS[state.weather];
+  const spb = 60/wt.bpm;
+  musicStep = 0;
+  musicNext = AC.currentTime + .1;
+  musicTimer = setInterval(()=>{
+    if(!state.soundOn){ return; }
+    const now = AC.currentTime;
+    while(musicNext < now + .25){
+      const idx = musicStep % wt.mel.length;
+      musicBoxNote(midiFreq(wt.mel[idx]), musicNext, spb*.92, .5);
+      if(musicStep % 8 === 0){
+        musicBoxNote(midiFreq(wt.mel[0]-12), musicNext, spb*1.6, .35);
+      }
+      musicNext += spb;
+      musicStep++;
+    }
+  }, 120);
+}
+function stopMusic(){
+  if(musicTimer){ clearInterval(musicTimer); musicTimer=null; }
+}
+
+/* 音效点缀 */
+function blip(freq,dur,vol){
+  if(!state.soundOn||!AC) return;
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.type='sine'; o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+dur);
+  o.connect(g); g.connect(AC.destination);
+  o.start(); o.stop(AC.currentTime+dur);
+}
+
+/* ============================================================
+   小雨角色 + 录音互动
+   ============================================================ */
+const voiceAudio = document.getElementById('voice');
+const voiceStatus = document.getElementById('voice-status');
+let xiaoyu = {
+  mode:'away',   // away | enter | idle | talk | wave | leave
+  x:148, y:76,
+  step:0, frameT:0,
+  waveT:0
+};
+
+function drawXiaoyu(t){
+  if(xiaoyu.mode==='away') return;
+  let art = XIAOYU_IDLE;
+  if(xiaoyu.mode==='enter' || xiaoyu.mode==='leave'){
+    art = xiaoyu.frameT%2===0 ? XIAOYU_WALKA : XIAOYU_WALKB;
+  } else if(xiaoyu.mode==='wave'){
+    art = XIAOYU_WAVE;
+  }
+  px(art, Math.round(xiaoyu.x), xiaoyu.y);
+  /* 说话时的对话气泡由 speech 承担，角色脚下小影 */
+  ctx.fillStyle='rgba(0,0,0,.25)';
+  ctx.fillRect(Math.round(xiaoyu.x)+2, xiaoyu.y+20, 12, 1);
+}
+
+function updateXiaoyu(){
+  const speed = .55;
+  if(xiaoyu.mode==='enter'){
+    xiaoyu.x -= speed;
+    xiaoyu.frameT++;
+    if(xiaoyu.x <= 66){
+      xiaoyu.x = 66;
+      xiaoyu.mode='talk';
+      xiaoyu.frameT=0;
+      onXiaoyuArrived();
+    }
+  } else if(xiaoyu.mode==='leave'){
+    xiaoyu.x += speed;
+    xiaoyu.frameT++;
+    if(xiaoyu.x >= 148){
+      xiaoyu.mode='away';
+      xiaoyu.frameT=0;
+      onXiaoyuLeft();
+    }
+  } else if(xiaoyu.mode==='wave'){
+    xiaoyu.waveT--;
+    if(xiaoyu.waveT<=0){
+      xiaoyu.mode='leave';
+      xiaoyu.frameT=0;
+      say('好啦，我先进屋啦。你慢慢待着，就当自己家。');
+    }
+  } else if(xiaoyu.mode==='talk'){
+    /* 轻微呼吸起伏 */
+  }
+}
+
+function onXiaoyuArrived(){
+  typeText('嗨，你来啦！欢迎来我家坐坐。我给你留了段录音，一起听听？', 40).then(()=>{
+    setTimeout(()=>{
+      voiceStatus.classList.add('show');
+      voiceAudio.play().catch(()=>{
+        voiceStatus.classList.remove('show');
+        typeText('（录音好像没加载出来……要不检查一下音频文件？）',40);
+      });
+    }, 700);
+  });
+}
+
+voiceAudio.addEventListener('ended', ()=>{
+  voiceStatus.classList.remove('show');
+  xiaoyu.mode='wave';
+  xiaoyu.waveT = 46;
+  blip(660,.18,.06);
+  /* 录音结束，恢复天气音乐 */
+  startMusic();
+});
+voiceAudio.addEventListener('error', ()=>{
+  voiceStatus.classList.remove('show');
+  if(xiaoyu.mode==='talk'){
+    typeText('（录音加载失败了……不过没关系，小屋依然欢迎你。）',40);
+  }
+});
+
+function onXiaoyuLeft(){
+  typeText('小雨回房间啦。客厅留给你，想待多久都行。', 40);
+}
+
+/* ============================================================
+   交互
+   ============================================================ */
+const btnWeather=document.getElementById('btn-weather');
+const btnCandle=document.getElementById('btn-candle');
+const btnNote=document.getElementById('btn-note');
+const btnLot=document.getElementById('btn-lot');
+const btnVoice=document.getElementById('btn-voice');
+const btnSound=document.getElementById('btn-sound');
+const btnInstall=document.getElementById('btn-install');
+const installModal=document.getElementById('install-modal');
+const modal=document.getElementById('modal');
+const noteInput=document.getElementById('note-input');
+
+/* ============================================================
+   添加到桌面
+   ============================================================ */
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredPrompt = e;
+});
+window.addEventListener('appinstalled', ()=>{
+  btnInstall.style.display='none';
+});
+/* 已安装（从桌面图标打开）时隐藏按钮 */
+if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true){
+  btnInstall.style.display='none';
+}
+/* 微信环境检测 */
+const isWeChat = /micromessenger/i.test(navigator.userAgent);
+const wechatBar = document.getElementById('wechat-bar');
+if(isWeChat){
+  wechatBar.classList.add('show');
+}
+btnInstall.addEventListener('click', async ()=>{
+  blip(700,.15,.05);
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    if(choice && choice.outcome==='accepted'){
+      btnInstall.style.display='none';
+      typeText('小雨已经住进你的桌面啦，随时来坐坐。',40);
+    }
+    deferredPrompt=null;
+    return;
+  }
+  /* 无安装提示能力：按环境显示引导 */
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  document.getElementById('wechat-steps').classList.toggle('show', isWeChat);
+  document.getElementById('ios-steps').classList.toggle('show', !isWeChat && isIOS);
+  document.getElementById('android-steps').style.display = (isWeChat || isIOS) ? 'none' : 'block';
+  installModal.classList.add('open');
+});
+document.getElementById('install-close').addEventListener('click', ()=>{
+  installModal.classList.remove('open');
+});
+installModal.addEventListener('click', (e)=>{
+  if(e.target===installModal) installModal.classList.remove('open');
+});
+
+const WEATHER_NAMES = WEATHERS.map(w=>w.name);
+
+btnWeather.addEventListener('click', ()=>{
+  state.weather=(state.weather+1)%WEATHERS.length;
+  initParticles();
+  blip(660,.15,.05);
+  typeText('窗外现在是' + WEATHER_NAMES[state.weather] + '。每一种天气，都很适合发呆。', 40);
+  updateAmbience();
+  startMusic();
+});
+
+btnCandle.addEventListener('click', ()=>{
+  state.candleOn=!state.candleOn;
+  btnCandle.classList.toggle('on', state.candleOn);
+  blip(state.candleOn?520:380,.12,.05);
+  typeText(state.candleOn? '蜡烛点上了，光晕暖暖的。' : '蜡烛吹灭了，夜色也很温柔。', 40);
+});
+
+btnSound.addEventListener('click', ()=>{
+  initAudio();
+  state.soundOn=!state.soundOn;
+  btnSound.textContent = state.soundOn ? '关声音' : '开声音';
+  btnSound.classList.toggle('on', state.soundOn);
+  updateAmbience();
+  if(state.soundOn){ blip(880,.2,.06); startMusic(); }
+});
+
+btnNote.addEventListener('click', ()=>{
+  noteInput.value='';
+  modal.classList.add('open');
+  setTimeout(()=>noteInput.focus(),50);
+});
+document.getElementById('note-cancel').addEventListener('click', ()=>{
+  modal.classList.remove('open');
+});
+document.getElementById('note-burn').addEventListener('click', ()=>{
+  const txt=noteInput.value.trim();
+  modal.classList.remove('open');
+  if(!txt){ typeText('唔，纸条是空的……不过没关系，想写的时候再来。',40); return; }
+  if(state.noteFlying) return;
+  state.noteFlying=true;
+  blip(440,.1,.05);
+  flyNote().then(()=>{
+    state.fireBoost=1;
+    state.noteFlying=false;
+    smoke=[];
+    for(let i=0;i<14;i++){
+      smoke.push({x:100+rnd(-5,5), y:58+rnd(0,8), vx:rnd(-.15,.15), vy:rnd(.15,.35), life:rnd(.6,1)});
+    }
+    blip(330,.25,.06);
+    setTimeout(()=>typeText(pick(BURN_MSGS),40),900);
+  });
+});
+
+btnLot.addEventListener('click', ()=>{
+  blip(780,.2,.05);
+  typeText(pick(LOTS), 45);
+});
+
+btnVoice.addEventListener('click', ()=>{
+  if(xiaoyu.mode!=='away') return;
+  initAudio();
+  /* 播放录音时压低/暂停天气音乐 */
+  stopMusic();
+  if(musicGain) musicGain.gain.setTargetAtTime(.04, AC?AC.currentTime:0, .3);
+  voiceAudio.pause();
+  voiceAudio.currentTime = 0;
+  xiaoyu.mode='enter';
+  xiaoyu.x=148;
+  xiaoyu.frameT=0;
+  blip(520,.15,.05);
+});
+
+/* 纸条飞入动画 */
+function flyNote(){
+  return new Promise(res=>{
+    let x=110, y=76;
+    const tx=104, ty=60;
+    let p=0;
+    const iv=setInterval(()=>{
+      p+=.07;
+      x += (tx-x)*.2;
+      y += (ty-y)*.2 - .2;
+      ctx.fillStyle='#f5e9d0';
+      ctx.fillRect(x,y,6,4);
+      ctx.fillStyle='#d9c9a8';
+      ctx.fillRect(x,y,6,1);
+      if(p>=1){ clearInterval(iv); res(); }
+    },30);
+  });
+}
+
+/* 点击场景互动 */
+canvas.addEventListener('click', (e)=>{
+  const rect=canvas.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)/rect.width*W;
+  const my=(e.clientY-rect.top)/rect.height*H;
+  if(mx>28&&mx<50&&my>78&&my<94){
+    blip(600,.1,.04);
+    typeText('喵 ~（它蹭了蹭你的手）',40);
+    return;
+  }
+  if(mx>88&&mx<128&&my>44&&my<86){
+    blip(500,.1,.04);
+    typeText('壁炉暖暖的。想放下点什么，就点「写下烦恼」。',40);
+    return;
+  }
+  if(mx>136&&mx<158&&my>42&&my<86){
+    blip(700,.1,.04);
+    typeText('那是小雨的房间。想见他，就点「召唤小雨」。',40);
+    return;
+  }
+  if(mx>windowRect.x-4&&mx<windowRect.x+windowRect.w+8&&my>windowRect.y-4&&my<windowRect.y+windowRect.h+8){
+    blip(700,.1,.04);
+    typeText('外面是' + WEATHER_NAMES[state.weather] + '。看着它发一会儿呆吧。',40);
+  }
+});
+
+/* ---------- 主循环 ---------- */
+let last=performance.now();
+function loop(now){
+  const t=now-last;
+  last=now;
+  updateXiaoyu();
+  drawScene(t);
+  updateParticles(t);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* 注册 PWA Service Worker（仅 https / localhost 生效，本地双击打开不影响） */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+/* 开场 */
+window.addEventListener('load', ()=>{
+  setTimeout(()=>{
+    typeText('欢迎来到小雨家。这里很安全，慢慢放松就好。',40);
+  },600);
+});
+</script>
+</body>
+</html>
